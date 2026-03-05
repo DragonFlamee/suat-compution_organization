@@ -1,43 +1,43 @@
 // system 
-	`define ysyx_25060170_RSTABLE		1'b1
+	`define SUAT_RSTABLE		1'b1
 
 // ifu
-	`define ysyx_25060170_PC 31:0
-	`define ysyx_25060170_ZERO32 32'h00000000
-	`define ysyx_25060170_STARTPC 32'h80000000
-	`define ysyx_25060170_PLUS4 32'h00000004
+	`define SUAT_PC 31:0
+	`define SUAT_ZERO32 32'h00000000
+	`define SUAT_STARTPC 32'h80000000
+	`define SUAT_PLUS4 32'h00000004
 
 //regfile
-  	`define ysyx_25060170_REGADDR 4:0
-	`define ysyx_25060170_REG 31:0
-	`define ysyx_25060170_WENABLE 1'b1
-	`define ysyx_25060170_WDISABLE 1'b0
-	`define ysyx_25060170_RENABLE 1'b1
-	`define ysyx_25060170_RDISABLE 1'b0
+  	`define SUAT_REGADDR 4:0
+	`define SUAT_REG 31:0
+	`define SUAT_WENABLE 1'b1
+	`define SUAT_WDISABLE 1'b0
+	`define SUAT_RENABLE 1'b1
+	`define SUAT_RDISABLE 1'b0
 
 //idu
-  `define ysyx_25060170_INST			 	31:0
-  `define ysyx_25060170_DATA			 	31:0
-  `define ysyx_25060170_IMM 				31:0
-  `define ysyx_25060170_SYSTEM				5'b11100
-  `define ysyx_25060170_OPIMM				5'b00100
-  `define ysyx_25060170_OP        			5'b01100
-  `define ysyx_25060170_OPIMM32    	 		5'b00110
-  `define ysyx_25060170_OP32      			5'b01110
-  `define ysyx_25060170_LUI            		5'b01101
-  `define ysyx_25060170_AUIPC          		5'b00101
-  `define ysyx_25060170_JAL            		5'b11011
-  `define ysyx_25060170_JALR           		5'b11001
-  `define ysyx_25060170_BRANCH             	5'b11000
-  `define ysyx_25060170_LOAD               	5'b00000
-  `define ysyx_25060170_STORE              	5'b01000
+  `define SUAT_INST			 	31:0
+  `define SUAT_DATA			 	31:0
+  `define SUAT_IMM 				31:0
+  `define SUAT_SYSTEM				5'b11100
+  `define SUAT_OPIMM				5'b00100
+  `define SUAT_OP        			5'b01100
+  `define SUAT_OPIMM32    	 		5'b00110
+  `define SUAT_OP32      			5'b01110
+  `define SUAT_LUI            		5'b01101
+  `define SUAT_AUIPC          		5'b00101
+  `define SUAT_JAL            		5'b11011
+  `define SUAT_JALR           		5'b11001
+  `define SUAT_BRANCH             	5'b11000
+  `define SUAT_LOAD               	5'b00000
+  `define SUAT_STORE              	5'b01000
   
 //exu
-  `define ysyx_25060170_BRANCHABLE 1'b1
-  `define ysyx_25060170_BRANCHDISABLE 1'b0
+  `define SUAT_BRANCHABLE 1'b1
+  `define SUAT_BRANCHDISABLE 1'b0
 
 //lsu
-  `define ysyx_25060170_DATAADDR 31:0
+  `define SUAT_DATAADDR 31:0
 
 //inst
 	`define EBREAK_TRAP        32'b00000000000100000000000001110011

@@ -1,32 +1,32 @@
 `include "define.v"
 
-module ysyx_25060170_lsu(
+module SUAT_lsu(
     input wire rst,//
     input wire clk,//
-    input wire [`ysyx_25060170_DATA] alu_res,//
-    input wire [`ysyx_25060170_DATA] store_data,//
+    input wire [`SUAT_DATA] alu_res,//
+    input wire [`SUAT_DATA] store_data,//
     input wire [3:0] ls_ctl,//
-    output wire [`ysyx_25060170_DATA] ls_data_o
+    output wire [`SUAT_DATA] ls_data_o
 );
 
-wire [`ysyx_25060170_DATAADDR] raddr;
-wire [`ysyx_25060170_DATAADDR] waddr;
+wire [`SUAT_DATAADDR] raddr;
+wire [`SUAT_DATAADDR] waddr;
 
 /* verilator lint_off UNUSEDSIGNAL */
 reg [7:0] rlen = 8'd4;  // 32-bit: maximum 4 bytes
 reg [7:0] wlen;
 /* verilator lint_on UNUSEDSIGNAL */
 
-reg [`ysyx_25060170_DATA] data_i;
-reg [`ysyx_25060170_DATA] data_o;
+reg [`SUAT_DATA] data_i;
+reg [`SUAT_DATA] data_o;
 wire re;
 wire we;
-reg [`ysyx_25060170_DATA] load_data;
+reg [`SUAT_DATA] load_data;
 
-assign re = (rst == `ysyx_25060170_RSTABLE | ls_ctl == 4'b0000) ? 1'b0 : ls_ctl[3];
-assign we = (rst == `ysyx_25060170_RSTABLE | ls_ctl == 4'b0000) ? 1'b0 : ~ls_ctl[3];
-assign waddr = (rst == `ysyx_25060170_RSTABLE) ? `ysyx_25060170_ZERO32 : alu_res[31:0];
-assign raddr = (rst == `ysyx_25060170_RSTABLE) ? `ysyx_25060170_ZERO32 : alu_res[31:0];
+assign re = (rst == `SUAT_RSTABLE | ls_ctl == 4'b0000) ? 1'b0 : ls_ctl[3];
+assign we = (rst == `SUAT_RSTABLE | ls_ctl == 4'b0000) ? 1'b0 : ~ls_ctl[3];
+assign waddr = (rst == `SUAT_RSTABLE) ? `SUAT_ZERO32 : alu_res[31:0];
+assign raddr = (rst == `SUAT_RSTABLE) ? `SUAT_ZERO32 : alu_res[31:0];
 
 //--------------------------load-----------------------------------------------------------------//
 wire [1:0] byte_sel = alu_res[1:0];  // 32-bit: 2 bits for byte selection
@@ -38,7 +38,7 @@ reg [15:0] data_half = data_i[15:0];
 wire [31:0] data_word = data_i;  // 32-bit word
 
 // always @(*) begin
-//     if (rst == `ysyx_25060170_RSTABLE) begin
+//     if (rst == `SUAT_RSTABLE) begin
 //         data_byte = 8'b00000000;
 //     end else begin
 //         case (byte_sel)
@@ -51,7 +51,7 @@ wire [31:0] data_word = data_i;  // 32-bit word
 // end
 
 // always @(*) begin
-//     if (rst == `ysyx_25060170_RSTABLE) begin
+//     if (rst == `SUAT_RSTABLE) begin
 //         data_half = 16'h0;
 //     end else begin
 //         case (half_sel)
@@ -63,8 +63,8 @@ wire [31:0] data_word = data_i;  // 32-bit word
 // end
 
 always @(*) begin
-    if (rst == `ysyx_25060170_RSTABLE) begin
-        load_data = `ysyx_25060170_ZERO32;
+    if (rst == `SUAT_RSTABLE) begin
+        load_data = `SUAT_ZERO32;
     end 
     else if (ls_ctl[3] == 1'b1) begin
         case (ls_ctl[2:0])
@@ -73,10 +73,10 @@ always @(*) begin
             3'b011: load_data = data_word;                          // LW: word
             3'b101: load_data = {24'b0, data_byte};                 // LBU: zero-extended byte
             3'b110: load_data = {16'b0, data_half};                 // LHU: zero-extended halfword
-            default: load_data = `ysyx_25060170_ZERO32;
+            default: load_data = `SUAT_ZERO32;
         endcase
     end else begin
-        load_data = `ysyx_25060170_ZERO32;
+        load_data = `SUAT_ZERO32;
     end
 end
 
@@ -86,7 +86,7 @@ reg [3:0] sh_mask;  // 32-bit: 2 halfwords
 reg [3:0] sw_mask;  // 32-bit: 1 word
 
 always @(*) begin
-    if (rst == `ysyx_25060170_RSTABLE) begin
+    if (rst == `SUAT_RSTABLE) begin
         sb_mask = 4'd0;
     end else begin
         case (byte_sel)
@@ -99,7 +99,7 @@ always @(*) begin
 end
 
 always @(*) begin
-    if (rst == `ysyx_25060170_RSTABLE) begin
+    if (rst == `SUAT_RSTABLE) begin
         sh_mask = 4'd0;
     end else begin
         case (half_sel)
@@ -111,7 +111,7 @@ always @(*) begin
 end
 
 always @(*) begin
-    if (rst == `ysyx_25060170_RSTABLE) begin
+    if (rst == `SUAT_RSTABLE) begin
         sw_mask = 4'b1111;  // Store word always uses all 4 bytes
     end else begin
         sw_mask = 4'b1111;  // Word must be aligned to 4 bytes
@@ -119,8 +119,8 @@ always @(*) begin
 end
 
 always @(*) begin
-    if (rst == `ysyx_25060170_RSTABLE) begin
-        data_o = `ysyx_25060170_ZERO32;
+    if (rst == `SUAT_RSTABLE) begin
+        data_o = `SUAT_ZERO32;
         wlen = 8'd0;
     end else begin
         case (ls_ctl)
@@ -137,7 +137,7 @@ always @(*) begin
                 wlen = {{4{1'b0}}, sw_mask};
             end
             default: begin
-                data_o = `ysyx_25060170_ZERO32;
+                data_o = `SUAT_ZERO32;
                 wlen = 8'd0;
             end
         endcase
@@ -158,7 +158,7 @@ always @(negedge clk) begin
 end
 
 //------------------------output----------------------------------------------------------------------//
-assign ls_data_o = re ? load_data : `ysyx_25060170_ZERO32;
+assign ls_data_o = re ? load_data : `SUAT_ZERO32;
 
 // Remove unused wire for 32-bit
 // wire _unused_ok = &{alu_res[2:0]};

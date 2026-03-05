@@ -10,16 +10,9 @@ module ysyx_25060170_exu(
     input wire            jump_i,
     input wire [ 7:0]     alu_sel,
     input wire            branch_i,
-    input wire [3:0]      csr_ctl,
     
     output wire [`ysyx_25060170_REG] store_data,//
-    output wire [`ysyx_25060170_PC] jump_pc_o,//
-    output wire ex_pcsrc_o,//
-    output reg [`ysyx_25060170_DATA] exu_res,//
-	  output wire [`ysyx_25060170_REG]  csr_ex_mstatus     ,//
-	  output wire [`ysyx_25060170_REG]  csr_ex_mepc        ,//
-	  output wire [`ysyx_25060170_REG]  csr_ex_mtvec       ,//
-	  output wire [`ysyx_25060170_REG]  csr_ex_mcause      //
+    output wire [`ysyx_25060170_PC] jump_pc_o//
 );
 
 // 32-bit operations
@@ -48,7 +41,7 @@ reg [`ysyx_25060170_DATA] alu_res;
 
 always@(*) begin
   if(rst == `ysyx_25060170_RSTABLE) begin
-    alu_res = `ysyx_25060170_ZERO32;
+    // alu_res = `ysyx_25060170_ZERO;
   end
   else begin
     case(alu_sel)
@@ -73,12 +66,6 @@ always@(*) begin
       `INST_JAL, `INST_JALR: begin alu_res = pc_i + 32'd4; end
       `INST_EBREAK: begin alu_res = op1; end
 
-      `INST_MUL: begin alu_res = op1_mul_op2; end
-      `INST_MULH: begin alu_res = op1_mulh_op2; end
-
-      `INST_DIV, `INST_DIVU: begin alu_res = div; end
-
-      `INST_REM, `INST_REMU: begin alu_res = rem; end
 
       default: begin
         alu_res = `ysyx_25060170_ZERO32;
@@ -107,61 +94,14 @@ always @(*) begin
 end
 
 // Out to IFU
-assign ex_pcsrc_o = jump_i | ex_branch | csr_ctl[1] | csr_ctl[0];
+assign ex_pcsrc_o = jump_i | ex_branch;
 assign jump_pc_o = (alu_sel == `INST_JAL | branch_i) ? pc_i + imm :
                    (alu_sel == `INST_JALR) ? (op1 + imm) & ~32'd1 :  // JALR clears least significant bit
-                   (csr_ctl[1] | csr_ctl[0]) ? read_csr_data :
                    `ysyx_25060170_ZERO32;
 
 // Out to LSU
 assign store_data = op2;
 
-// CSR
-wire [11:0] csr_addr = (csr_ctl != 4'd0) ? imm[11:0] : 12'd0;
-wire [`ysyx_25060170_DATA] read_csr_data;
-reg [`ysyx_25060170_DATA] write_csr_data;
-reg [`ysyx_25060170_REG] mcause_value;
-
-
-wire [`ysyx_25060170_DATA] set_data = read_csr_data | op1;
-wire [`ysyx_25060170_DATA] clear_data = read_csr_data & (~op1);
-
-
-always @(*) begin
-  write_csr_data = `ysyx_25060170_ZERO32;
-  mcause_value = `ysyx_25060170_ZERO32;
-  case(alu_sel)
-    `INST_ECALL: begin write_csr_data = pc_i; mcause_value = 32'd11; end
-
-    `INST_CSRRW, `INST_CSRRWI: begin write_csr_data = op1; end
-
-    `INST_CSRRS, `INST_CSRRSI: begin write_csr_data = set_data; end
-
-    `INST_CSRRC, `INST_CSRRCI: begin write_csr_data = clear_data; end
-
-    default: begin
-      write_csr_data = `ysyx_25060170_ZERO32;
-      mcause_value = `ysyx_25060170_ZERO32;
-    end
-  endcase
-end
-
-ysyx_25060170_csr csr_operate(
-    .clk(clk),  //
-    .rst(rst),  //
-    .csr_ctl(csr_ctl),//
-    .csr_addr(csr_addr),//
-    .mcause_value(mcause_value),//
-    .read_csr_data(read_csr_data),//
-    .write_csr_data(write_csr_data),//
-	.mstatus_o(csr_ex_mstatus),
-	.mepc_o   (csr_ex_mepc   ),
-	.mtvec_o  (csr_ex_mtvec  ),
-	.mcause_o (csr_ex_mcause )
-);
-
-// Out to WBU
-assign exu_res = (csr_ctl != 4'd0) ? read_csr_data : alu_res;
 
 endmodule
 

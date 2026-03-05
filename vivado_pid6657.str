@@ -109,3 +109,11 @@ dismissDialog("New Project"); // f (dialog0)
 // WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
 // WARNING: HEventQueue.dispatchEvent() is taking  1275 ms.
 // WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
+// [GUI Memory]: 78 MB (+79223kb) [00:25:34]
+// [Engine Memory]: 1,482 MB (+1402075kb) [00:25:34]
+// WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 1,490 MB. GUI used memory: 64 MB. Current time: 3/5/26, 7:04:34 PM CST
+// WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
+// Elapsed time: 2465 seconds
+closeMainWindow("Vivado 2024.1"); // F (MainFrame)
+selectCheckBox(RDIResource.MessageWithOptionDialog_DONT_SHOW_THIS_DIALOG_AGAIN, "Don't show this dialog again", true); // f (RDIResource.MessageWithOptionDialog_DONT_SHOW_THIS_DIALOG_AGAIN): TRUE
