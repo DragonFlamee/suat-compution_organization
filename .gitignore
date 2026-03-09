@@ -1,0 +1,7 @@
+!*.v
+!*.sv
+build/
+.Xil
+*.log
+*.jou
+*.vcd
