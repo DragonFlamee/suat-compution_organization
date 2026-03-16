@@ -1,8 +1,5 @@
- `include "define.v"
-
 module SUAT_idu_decoder(
-	 input  wire                 		        rst  	
-	,input  wire   [`SUAT_INST]	    			inst	
+	input  wire   [`SUAT_INST]	    			inst	
 	,output wire						        rs1_ena	
 	,output wire						        rs2_ena	
 	,output wire						        jump	
@@ -11,7 +8,7 @@ module SUAT_idu_decoder(
 	,output wire                 				branch  
 	,output reg   [`SUAT_IMM]		 			ext_imm 
 	,output wire						        imm_ena	
-    ,output wire	 [7:0]					    alu_ctl	
+    ,output wire	 [9:0]					    alu_ctl	
 );
 
 wire [6:0] opcode ;
@@ -42,19 +39,19 @@ wire [7:0] inst_type;
 
 //-----------------------------------decode--------------------------------//
 
-assign inst_type[7] = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_SYSTEM)       ;
-assign inst_type[6] = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_OP32)   ;
-assign inst_type[5] = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_OPIMM32)   ;
-assign inst_type[4] = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_OPIMM)    ;
-assign inst_type[3] = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_OP)    ;
-assign inst_type[2] = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_BRANCH)    ;
-assign inst_type[1] = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_LOAD) & (opcode[1:0] == 2'b11)     ;
-assign inst_type[0] = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_STORE)     ;
+assign inst_type[7] = (opcode[6:2] == `SUAT_SYSTEM)       ;
+assign inst_type[6] = (opcode[6:2] == `SUAT_OP32)   ;
+assign inst_type[5] = (opcode[6:2] == `SUAT_OPIMM32)   ;
+assign inst_type[4] = (opcode[6:2] == `SUAT_OPIMM)    ;
+assign inst_type[3] = (opcode[6:2] == `SUAT_OP)    ;
+assign inst_type[2] = (opcode[6:2] == `SUAT_BRANCH)    ;
+assign inst_type[1] = (opcode[6:2] == `SUAT_LOAD) & (opcode[1:0] == 2'b11)     ;
+assign inst_type[0] = (opcode[6:2] == `SUAT_STORE)     ;
 
-wire inst_lui   = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_LUI)    ;
-wire inst_auipc = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_AUIPC)  ;
-wire inst_jal   = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_JAL)    ;
-wire inst_jalr  = (rst == `SUAT_RSTABLE) ? 0 : (opcode[6:2] == `SUAT_JALR)   ;
+wire inst_lui   = (opcode[6:2] == `SUAT_LUI)    ;
+wire inst_auipc = (opcode[6:2] == `SUAT_AUIPC)  ;
+wire inst_jal   = (opcode[6:2] == `SUAT_JAL)    ;
+wire inst_jalr  = (opcode[6:2] == `SUAT_JALR)   ;
 
 wire inst_sb    = inst_type[0] &  ~funct3[2] & ~funct3[1] & ~funct3[0]   ;
 wire inst_sh    = inst_type[0] &  ~funct3[2] & ~funct3[1] &  funct3[0]   ;
@@ -115,24 +112,18 @@ wire inst_csrrsi = inst_type[7] &  funct3[2] &  funct3[1] & ~funct3[0]   ;
 wire inst_csrrci = inst_type[7] &  funct3[2] &  funct3[1] &  funct3[0]   ;
 wire inst_ebreak = inst_type[7] & ~funct3[2] & ~funct3[1] & ~funct3[0] && (i_imm == 12'd1)         ;
 
-assign alu_ctl[7] = (rst == `SUAT_RSTABLE) ? 0 :   inst_srli | inst_xor | inst_auipc | inst_ebreak | inst_sh | inst_sw | inst_bltu | inst_ld | inst_mulh | inst_div | inst_remu | inst_csrrw | inst_csrrwi  |  inst_csrrsi | inst_csrrci;
-
-assign alu_ctl[6] = (rst == `SUAT_RSTABLE) ? 0 :   inst_slli | inst_sltu | inst_xor | inst_lui | inst_jalr | inst_sb | inst_bge | inst_bltu | inst_lw | inst_ld | inst_mul | inst_rem | inst_mret | inst_csrrc | inst_csrrsi;
-
-assign alu_ctl[5] = (rst == `SUAT_RSTABLE) ? 0 :   inst_andi | inst_slt | inst_sltu | inst_and |inst_auipc | inst_jal | inst_blt | inst_bge | inst_bltu | inst_lh | inst_lw | inst_lwu | inst_mulh | inst_mulhu | inst_divu | inst_ecall | inst_csrrw | inst_csrrs | inst_csrrci;
-
-assign alu_ctl[4] = (rst == `SUAT_RSTABLE) ? 0 :   inst_ori | inst_sll | inst_slt | inst_or | inst_lui | inst_bne | inst_blt | inst_bge | inst_lb | inst_lh | inst_ld | inst_lhu | inst_mul | inst_mulh | inst_mulhu | inst_div | inst_mret | inst_csrrwi;
-
-assign alu_ctl[3] = (rst == `SUAT_RSTABLE) ? 0 :   inst_xori  | inst_sub | inst_sll  | inst_sra  | inst_and | inst_beq | inst_bne   | inst_blt | inst_bgeu  | inst_lb  | inst_lw   | inst_lbu | inst_lwu | inst_mul | inst_div | inst_ecall  | inst_csrrw | inst_csrrc | inst_csrrsi ;
-
-assign alu_ctl[2] = (rst == `SUAT_RSTABLE) ? 0 :   inst_sltiu   | inst_add | inst_sub | inst_srl  | inst_or | inst_ebreak  | inst_sd | inst_beq | inst_bne | inst_bgeu   | inst_lh | inst_lhu | inst_lwu | inst_mulhu | inst_remu | inst_mret  | inst_csrrs | inst_csrrwi | inst_csrrci ;
-
-assign alu_ctl[1] = (rst == `SUAT_RSTABLE) ? 0 :   inst_slti | inst_srai  | inst_add  | inst_sra | inst_jalr  | inst_sh  | inst_sd   | inst_beq   | inst_lb  | inst_lbu | inst_lhu | inst_mulhsu | inst_mulhu | inst_divu | inst_rem | inst_remu | inst_ecall |inst_csrrc  ;
-
-assign alu_ctl[0] = (rst == `SUAT_RSTABLE) ? 0 :   inst_addi | inst_srai  | inst_srl | inst_jal | inst_sb | inst_sw   | inst_sd   | inst_bgeu    | inst_lbu | inst_mulhsu | inst_divu | inst_rem | inst_csrrs             ;
+assign alu_ctl[9] = inst_sltu | inst_slt | inst_sltiu | inst_slti;
+assign alu_ctl[8] = inst_xor | inst_xori;
+assign alu_ctl[7] = inst_or | inst_ori;
+assign alu_ctl[6] = inst_and | inst_andi;
+assign alu_ctl[5] = inst_sltu | inst_slt | inst_sub | inst_sltiu | inst_slti;
+assign alu_ctl[4] = inst_sltu | inst_sltiu;
+assign alu_ctl[3] = inst_add | inst_sub | inst_addi;
+assign alu_ctl[2] = inst_srl | inst_sra | inst_sll | inst_srli | inst_srai | inst_slli;
+assign alu_ctl[1] = inst_sra | inst_srai;
+assign alu_ctl[0] = inst_srl | inst_sra | inst_srli | inst_srai;
 
 wire inst_csr   = inst_csrrw | inst_csrrs | inst_csrrc ;
-
 
 //--------------------------output signal-----------------------//
 
@@ -147,10 +138,7 @@ assign jump = inst_jal | inst_jalr;
 
 //Extend IMM
 always @(*) begin
-	if (rst == `SUAT_RSTABLE) begin
-		ext_imm = `SUAT_ZERO32;
-	end
-	else if (inst_type[1] | inst_type[4] | inst_type[5] | inst_type[7] | inst_jalr) begin
+	if (inst_type[1] | inst_type[4] | inst_type[5] | inst_type[7] | inst_jalr) begin
 		ext_imm = {{20{i_imm[11]}}, i_imm}; // i_imm扩展为32位
 	end
 	else if (inst_lui | inst_auipc) begin

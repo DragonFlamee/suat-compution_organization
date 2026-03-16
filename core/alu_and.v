@@ -1,7 +1,9 @@
-module alu_xor(
+module alu_and(
     input  wire [31:0] a,
     input  wire [31:0] b,
     output wire [31:0] out
 );
-    //TOOD
+
+// Please complete the code
+
 endmodule

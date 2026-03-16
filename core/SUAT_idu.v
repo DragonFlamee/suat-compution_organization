@@ -1,10 +1,6 @@
- `include "define.v"
 module SUAT_idu(
 	//system input
-	 input	  wire		       		rst		
-	
-	//ifu input
-	,input	  wire [`SUAT_INST]	    inst_i	
+	input	  wire [`SUAT_INST]	    inst_i	
 	,input	  wire [`SUAT_PC]		pc_i	
 	
 	//regfile signal
@@ -20,7 +16,7 @@ module SUAT_idu(
   	,output    wire [`SUAT_REGADDR] rd_addr 
         
 	//control out signal
-	,output    wire [7:0]         	alusrc_o  
+	,output    wire [9:0]         	alusrc_o  
 	,output    wire [3:0]      		lsctl_o   
 	,output    wire [1:0]     		wbctl_o    
 	,output    wire            		branch_o   
@@ -46,8 +42,7 @@ assign  rs2      =  inst_i [24:20]  ;
 wire imm_ena ;
 
 SUAT_idu_decoder decode(
-	 .rst		(rst		)	
-	,.inst		(inst_i		)
+	.inst		(inst_i		)
 	,.rs1_ena	(rs1_ena	)
 	,.rs2_ena	(rs2_ena	)
 	,.ext_imm	(imm		)	
@@ -70,20 +65,18 @@ assign rd_addr = rd_ena ? rd : 5'd0 ;
 //out to exu
 //rs1
 always @(*) begin
-  if(rst == `SUAT_RSTABLE) begin  op1 = `SUAT_ZERO32   ;   end
-  else if(rs1_ena) begin op1 = rs1_data ; end
+  if(rs1_ena) begin op1 = rs1_data ; end
   else if (alusrc_o == `INST_AUIPC | alusrc_o == `INST_JAL) begin  op1 = pc_i ;  end
 	else if (alusrc_o == `INST_CSRRWI | alusrc_o == `INST_CSRRSI | alusrc_o == `INST_CSRRCI) begin op1 ={{27{1'b0}},rs1};end
   else begin op1 = `SUAT_ZERO32; end
   end
 //rs2  
 always @(*) begin
-  if(rst == `SUAT_RSTABLE) begin  op2 = `SUAT_ZERO32   ;   end
-  else if(rs2_ena) begin op2 = rs2_data ; end
+  if(rs2_ena) begin op2 = rs2_data ; end
   else if(imm_ena) begin op2 = imm ; end
   else begin op2 = `SUAT_ZERO32; end
  end
 
-assign pc_o = rst == `SUAT_RSTABLE ? `SUAT_ZERO32 : pc_i	;
+assign pc_o = pc_i	;
 
 endmodule

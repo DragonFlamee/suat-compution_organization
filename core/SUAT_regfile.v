@@ -1,5 +1,3 @@
-`include "define.v"
-
 module SUAT_regfile (
      input    wire             					clk   
     ,input    wire             					rst   
