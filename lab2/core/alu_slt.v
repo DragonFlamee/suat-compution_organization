@@ -4,5 +4,6 @@ module alu_slt(
 );
 
 // Please complete the code
+assign out = lt ? 32'b1:32'b0;
 
 endmodule

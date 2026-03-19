@@ -8,5 +8,19 @@ module alu_add(
 );
 
 // Please complete the code
+wire [32:0] b_mux;
+wire [32:0] result;
+wire        cout;
+
+assign b_mux = is_sub ? {1'b0, ~b} : {1'b0, b};
+assign result = {1'b0, a} + b_mux + {32'b0, is_sub};
+assign cout   = result[32];
+assign out    = result[31:0];
+
+wire overflow;
+assign overflow = (~a[31] & ~b_mux[31] &  out[31])
+                | ( a[31] &  b_mux[31] & ~out[31]);
+
+assign lt = is_unsigned ? ~cout : (out[31] ^ overflow);
 
 endmodule
