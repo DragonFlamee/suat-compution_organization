@@ -1,9 +1,9 @@
-`include <define.v>
+`include "define.v"
 
 module SUAT_alu( 
      input  wire [`SUAT_DATA] op1
     ,input  wire [`SUAT_DATA] op2
-    ,input  wire [9:0]        alu_op
+    ,input  wire [10:0]       alu_op
     ,output wire [`SUAT_DATA] alu_res
 );
 

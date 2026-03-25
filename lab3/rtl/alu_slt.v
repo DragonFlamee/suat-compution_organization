@@ -3,6 +3,6 @@ module alu_slt(
     output wire  [31:0]  out
 );
 
-// Please complete the code
+assign out = {31'b0, lt};
 
 endmodule

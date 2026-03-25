@@ -1,0 +1,25 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"../../../../../rtl/SUAT_alu.v" \
+"../../../../../rtl/SUAT_exu.v" \
+"../../../../../rtl/SUAT_idu.v" \
+"../../../../../rtl/SUAT_idu_decoder.v" \
+"../../../../../rtl/SUAT_ifu.v" \
+"../../../../../rtl/SUAT_regfile.v" \
+"../../../../../rtl/SUAT_top.v" \
+"../../../../../rtl/SUAT_wbu.v" \
+"../../../../../rtl/alu_add.v" \
+"../../../../../rtl/alu_and.v" \
+"../../../../../rtl/alu_or.v" \
+"../../../../../rtl/alu_shifter.v" \
+"../../../../../rtl/alu_slt.v" \
+"../../../../../rtl/alu_xor.v" \
+
+sv xil_defaultlib  \
+"../../../../../sim/sumfoanarithmeticsequence.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

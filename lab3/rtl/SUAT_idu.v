@@ -1,4 +1,4 @@
-`include <define.v>
+`include "define.v"
 
 
 module SUAT_idu(
@@ -16,12 +16,14 @@ module SUAT_idu(
 	,input     wire [`SUAT_REG]     rs2_data 
 
 	,output    wire					rs3_ena  
+	,output    wire [2:0]           branch_type_o
+	,output    wire                 jalr_o
 	
 	,output    wire				 	rd_ena  
   	,output    wire [`SUAT_REGADDR] rd_addr 
         
 	//control out signal
-	,output    wire [9:0]         	alusrc_o  
+	,output    wire [10:0]        	alusrc_o  
 	,output    wire [3:0]      		lsctl_o   
 	,output    wire [1:0]     		wbctl_o    
 	,output    wire            		branch_o   
@@ -52,6 +54,8 @@ SUAT_idu_decoder decode(
 	,.rs1_ena	(rs1_ena	)
 	,.rs2_ena	(rs2_ena	)
 	,.rs3_ena   (rs3_ena	)
+	,.jalr_ena  (jalr_o    )
+	,.branch_type(branch_type_o)
 	,.ext_imm	(imm		)	
 	,.imm_ena	(imm_ena	)
 	,.jump		(jump_o		)	
@@ -72,8 +76,8 @@ assign rd_addr = rd_ena ? rd : 5'd0 ;
 //out to exu
 //op1
 always @(*) begin
-  if(rs1_ena) begin op1 = rs1_data ; end
-  else if(alusrc_o[10]) begin op1 = pc_i ; end
+	if(alusrc_o[10]) begin op1 = pc_i ; end
+	else if(rs1_ena) begin op1 = rs1_data ; end
   else begin op1 = `SUAT_ZERO32; end
   end
 
@@ -86,8 +90,7 @@ always @(*) begin
 
 //op3  
 always @(*) begin
-  if(rs3_ena) begin op3 = pc_i ; end
-  else begin op3 = `SUAT_ZERO32; end
+	op3 = pc_i;
  end
 
 assign pc_o = pc_i	;

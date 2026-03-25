@@ -1,12 +1,19 @@
-`include <define.v>
+`include "define.v"
 
 
 module SUAT_top(
 	 input wire              	clk		  
 	,input wire              	rst		  
-	,input wire [`SUAT_INST] 	tb_id_inst
-	,input wire [`SUAT_PC] 	 	tb_id_pc
+	,input wire [`SUAT_INST] 	tb_if_inst
+	,output wire [`SUAT_PC]  	tb_if_pc
+	,output wire              tb_ex_jump
+	,output wire [`SUAT_PC]   tb_ex_jump_pc
+	,output wire [`SUAT_DATA] tb_ex_res
 );
+
+// ifu
+wire [`SUAT_INST]                 if_id_inst;
+wire [`SUAT_PC]                   if_id_pc;
 
 // idu
 wire [`SUAT_REGADDR] 		  	id_reg_rs1_addr ;
@@ -15,20 +22,25 @@ wire [`SUAT_REGADDR] 		  	id_reg_rd_addr  ;
 wire                          	id_reg_rs1_ena	;
 wire                          	id_reg_rs2_ena	;
 wire                          	id_reg_rd_ena	;
+wire                           id_reg_rs3_ena;
 
 wire [`SUAT_IMM]     		   	id_ex_imm		;
 wire            		   		id_ex_branch    ;
 wire            		   		id_ex_jump      ;
 wire [3:0]      		   		id_ls_ctl  	    ;
 wire [1:0]      		   		id_wb_ctl    	;
-wire [9:0]						id_ex_alu_sel;
+wire [10:0]					id_ex_alu_sel;
 wire [`SUAT_PC]    		   		id_ex_pc    	;
 wire [`SUAT_DATA] 		   		id_ex_op1 ;
 wire [`SUAT_DATA] 		   		id_ex_op2 ;
-wire [3:0]                     	id_ex_csrctl;
+wire [`SUAT_DATA]              id_ex_op3 ;
+wire [2:0]                     id_ex_branch_type;
+wire                           id_ex_jalr;
 
 // exu
 wire [`SUAT_DATA] 	     		ex_aludata;
+wire                            ex_jump;
+wire [`SUAT_PC]                 ex_jump_pc;
 
 // wbu
 wire [`SUAT_DATA]	   			wb_reg_rd_data;
@@ -37,9 +49,19 @@ wire [`SUAT_DATA]	   			wb_reg_rd_data;
 wire [`SUAT_REG] 				reg_id_rs1_data;
 wire [`SUAT_REG] 				reg_id_rs2_data;
 
+SUAT_ifu ifu0(
+     .clk     (clk       )
+	,.rst     (rst       )
+	,.pcsrc_i (ex_jump   )
+	,.ex_pc_i (ex_jump_pc)
+	,.inst_i  (tb_if_inst)
+	,.inst_o  (if_id_inst)
+	,.pc_o    (if_id_pc  )
+);
+
 SUAT_idu idu1(
-     .inst_i	(tb_id_inst				)
-	,.pc_i	  	(tb_id_pc				)
+     .inst_i	(if_id_inst				)
+	,.pc_i	  	(if_id_pc				)
 
 	,.rs1_addr 	(id_reg_rs1_addr		)
 	,.rs1_ena	(id_reg_rs1_ena			)
@@ -48,6 +70,10 @@ SUAT_idu idu1(
 	,.rs2_addr	(id_reg_rs2_addr		)
 	,.rs2_ena	(id_reg_rs2_ena			)
 	,.rs2_data	(reg_id_rs2_data		)
+
+	,.rs3_ena	(id_reg_rs3_ena)
+	,.branch_type_o(id_ex_branch_type)
+	,.jalr_o	(id_ex_jalr)
 
 	,.rd_ena	(id_reg_rd_ena			)
 	,.rd_addr	(id_reg_rd_addr			)
@@ -60,15 +86,24 @@ SUAT_idu idu1(
 
 	,.op1		(id_ex_op1				)
 	,.op2		(id_ex_op2				)
+	,.op3		(id_ex_op3				)
 	,.imm		(id_ex_imm				)
 	,.pc_o		(id_ex_pc				)
 );
 
-SUAT_alu alu2(
-	 .src1  	(id_ex_op1				)
-	,.src2  	(id_ex_op2				)
-	,.alu_op 	(id_ex_alu_sel			)
-	,.alu_res	(ex_aludata				)
+SUAT_exu exu2(
+	 .op1         (id_ex_op1         )
+	,.op2         (id_ex_op2         )
+	,.op3         (id_ex_op3         )
+	,.imm         (id_ex_imm         )
+	,.alu_op      (id_ex_alu_sel     )
+	,.branch      (id_ex_branch      )
+	,.branch_type (id_ex_branch_type )
+	,.jump        (id_ex_jump        )
+	,.jalr_ena    (id_ex_jalr        )
+	,.exu_jump    (ex_jump           )
+	,.exu_jump_pc (ex_jump_pc        )
+	,.exu_res     (ex_aludata        )
 );
 
 SUAT_wbu wbu4(
@@ -91,5 +126,10 @@ SUAT_regfile reg5(
 	,.rdata2	(reg_id_rs2_data		)
 	,.ren2 		(id_reg_rs2_ena 		)
 );
+
+assign tb_ex_jump    = ex_jump;
+assign tb_ex_jump_pc = ex_jump_pc;
+assign tb_ex_res     = ex_aludata;
+assign tb_if_pc      = if_id_pc;
 
 endmodule

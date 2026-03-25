@@ -5,12 +5,14 @@ module SUAT_idu_decoder(
 	,output wire						        rs2_ena
 	,output wire								rs3_ena	
 	,output wire						        jump	
+	,output wire                                jalr_ena
+	,output wire  [2:0]                         branch_type
 	,output wire  [1:0]          				wb_ctl  
-	,output reg   [3:0]          				mem_ctl 
+	,output wire  [3:0]          				mem_ctl 
 	,output wire                 				branch  
 	,output reg   [`SUAT_IMM]		 			ext_imm 
 	,output wire						        imm_ena	
-    ,output wire	 [9:0]					    alu_ctl	
+    ,output wire	 [10:0]				    alu_ctl	
 );
 
 wire [6:0] opcode ;
@@ -114,14 +116,14 @@ wire inst_csrrsi = inst_type[7] &  funct3[2] &  funct3[1] & ~funct3[0]   ;
 wire inst_csrrci = inst_type[7] &  funct3[2] &  funct3[1] &  funct3[0]   ;
 wire inst_ebreak = inst_type[7] & ~funct3[2] & ~funct3[1] & ~funct3[0] && (i_imm == 12'd1)         ;
 
-assign alu_ctl[10] = inst_auipc | inst_lui ;
+assign alu_ctl[10] = inst_auipc;
 assign alu_ctl[9]  = inst_sltu  | inst_slt | inst_sltiu | inst_slti;
 assign alu_ctl[8]  = inst_xor   | inst_xori;
 assign alu_ctl[7]  = inst_or    | inst_ori ;
 assign alu_ctl[6]  = inst_and   | inst_andi;
 assign alu_ctl[5]  = inst_sltu  | inst_slt | inst_sub | inst_sltiu | inst_slti;
 assign alu_ctl[4]  = inst_sltu  | inst_sltiu;
-assign alu_ctl[3]  = inst_add   | inst_sub | inst_addi;
+assign alu_ctl[3]  = inst_add   | inst_sub | inst_addi | inst_lui | inst_auipc;
 assign alu_ctl[2]  = inst_srl   | inst_sra | inst_sll | inst_srli | inst_srai | inst_slli;
 assign alu_ctl[1]  = inst_sra   | inst_srai;
 assign alu_ctl[0]  = inst_srl   | inst_sra | inst_srli | inst_srai;
@@ -131,13 +133,15 @@ wire inst_csr   = inst_csrrw | inst_csrrs | inst_csrrc ;
 //--------------------------output signal-----------------------//
 
 //output to regfile signal
-assign rs1_ena =  inst_type[6] | inst_type[5] | inst_type[4] | inst_type[3] | inst_type[2] | inst_type[1] | inst_type[0] | inst_jalr | inst_csr | inst_ecall;
-assign rs2_ena =  inst_type[6] | inst_type[3] | inst_type[2] | inst_type[0] ;
-assign rs3_ena =  inst_jal     | inst_jalr    ;
+assign rs1_ena =  inst_type[4] | inst_type[3] | inst_type[2] | inst_jalr;
+assign rs2_ena =  inst_type[3] | inst_type[2];
+assign rs3_ena =  inst_jal | inst_jalr;
 
 //output to ifu singal
 assign branch = inst_type[2];
 assign jump = inst_jal | inst_jalr;
+assign jalr_ena = inst_jalr;
+assign branch_type = funct3;
 
 //Extend IMM
 always @(*) begin
@@ -161,29 +165,14 @@ always @(*) begin
 	end
 end
 
-assign imm_ena =  inst_type[0] | inst_type[1] | inst_type[2] | inst_type[4] | inst_type[5] | inst_type[7] |  inst_lui | inst_auipc  ;
+assign imm_ena =  inst_type[2] | inst_type[4] | inst_jal | inst_jalr | inst_lui | inst_auipc;
 
-//output to mem signal
-always @(*) begin
-  case(alu_ctl) 
-    `INST_SB : begin mem_ctl = 4'b0001; end
-    `INST_SH : begin mem_ctl = 4'b0010; end
-    `INST_SW : begin mem_ctl = 4'b0100; end
-    `INST_SD : begin mem_ctl = 4'b0101; end
-    `INST_LB : begin mem_ctl = 4'b1001; end
-    `INST_LH : begin mem_ctl = 4'b1010; end
-    `INST_LW : begin mem_ctl = 4'b1011; end
-    `INST_LD : begin mem_ctl = 4'b1100; end
-    `INST_LBU: begin mem_ctl = 4'b1101; end
-    `INST_LHU: begin mem_ctl = 4'b1110; end
-    `INST_LWU: begin mem_ctl = 4'b1111; end
-     default : begin mem_ctl = 4'b0000; end
-  endcase
-end
+// No load/store in this lab stage.
+assign mem_ctl = 4'b0000;
 
 
 //output to wb signal 
-assign wb_ctl = (inst_type[1] ) ? 2'b01 : (( inst_type[7] | inst_type[6] | inst_type[5] |inst_type[4] | inst_type[3] | inst_lui | inst_auipc | jump) ? 2'b10 : 2'b00 ) ;
+assign wb_ctl = (inst_type[4] | inst_type[3] | inst_lui | inst_auipc | jump) ? 2'b10 : 2'b00;
 
 
 

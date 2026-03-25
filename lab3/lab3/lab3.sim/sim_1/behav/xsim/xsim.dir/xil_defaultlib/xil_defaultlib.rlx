@@ -1,0 +1,20 @@
+0.7
+2020.2
+May 22 2024
+18:54:44
+/home/yuweijie/suat-compution_organization/lab3/lab3/lab3.sim/sim_1/behav/xsim/glbl.v,1708598507,verilog,,,,glbl,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_alu.v,1774367472,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_exu.v,/home/yuweijie/suat-compution_organization/lab3/rtl/define.v,SUAT_alu,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_exu.v,1774367472,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_idu.v,/home/yuweijie/suat-compution_organization/lab3/rtl/define.v,SUAT_exu,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_idu.v,1774407977,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_idu_decoder.v,/home/yuweijie/suat-compution_organization/lab3/rtl/define.v,SUAT_idu,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_idu_decoder.v,1774367630,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_regfile.v,,SUAT_idu_decoder,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_regfile.v,1774367472,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_top.v,/home/yuweijie/suat-compution_organization/lab3/rtl/define.v,SUAT_regfile,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_top.v,1774367630,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_wbu.v,/home/yuweijie/suat-compution_organization/lab3/rtl/define.v,SUAT_top,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_wbu.v,1774367472,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/alu_add.v,/home/yuweijie/suat-compution_organization/lab3/rtl/define.v,SUAT_wbu,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/alu_add.v,1774367631,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/alu_and.v,,alu_add,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/alu_and.v,1774262972,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/alu_or.v,,alu_and,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/alu_or.v,1774262972,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/alu_shifter.v,,alu_or,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/alu_shifter.v,1774262972,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/alu_slt.v,,alu_shifter,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/alu_slt.v,1774367472,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/alu_xor.v,,alu_slt,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/alu_xor.v,1774262972,verilog,,/home/yuweijie/suat-compution_organization/lab3/rtl/SUAT_top.v,,alu_xor,,uvm,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/rtl/define.v,1774262972,verilog,,,,,,,,,,,,
+/home/yuweijie/suat-compution_organization/lab3/sim/sumfoanarithmeticsequence.sv,1774409012,systemVerilog,,,,sumfoanarithmeticsequence,,uvm,,,,,,
