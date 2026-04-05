@@ -138,15 +138,60 @@ wire [31:0] imm;
 assign imm = i_imm & {32{i_imm_en}} | j_imm & {32{j_imm_en}} |
 	u_imm & {32{u_imm_en}} | s_imm & {32{s_imm_en}} | b_imm & {32{b_imm_en}};
 
-// No load/store in this lab stage.
-assign mem_ctl = 4'b0000;
-
 //output to wb signal 
 assign wbctl_op = rd_wen;
 
 //-------------------------------output--------------------------//
 
 // output to exu		TODO
+wire [9:0] alu_ctl;
+
+assign alu_ctl[9] = inst_slt | inst_sltu | inst_sltiu | inst_slti;
+
+assign alu_ctl[8] = inst_xor | inst_xori;
+assign alu_ctl[7] = inst_or  | inst_ori;
+assign alu_ctl[6] = inst_and | inst_andi;
+assign alu_ctl[5] = inst_sub | inst_slt | inst_sltu | inst_slti | inst_sltiu |
+					inst_blt | inst_bge | inst_bltu | inst_bgeu;
+assign alu_ctl[4] = inst_bltu | inst_bgeu | inst_sltu | inst_sltiu;
+assign alu_ctl[3] = inst_add | inst_addi | inst_sub | inst_lui | inst_auipc | jump;
+assign alu_ctl[2] = inst_sll | inst_slli | inst_srli |
+					inst_srl | inst_sra | inst_srai;
+assign alu_ctl[1] = inst_sra | inst_srai;
+assign alu_ctl[0] = inst_srl | inst_sra | inst_srli | inst_srai;
+
+
+assign exu_op = {
+	jump,
+	type_branch,
+	inst_bgeu,
+	inst_bltu,
+	inst_bge,
+	inst_blt,
+	inst_bne,
+	inst_beq,
+	alu_ctl
+};
+
+assign data1 =
+	({32{type_r | type_i | type_branch}} & rs1_data) |
+	({32{inst_auipc}} & pc) |
+	({32{inst_lui}} & 32'b0) |
+	({32{jump}} & snpc);
+
+assign data2 =
+	({32{type_r | type_branch}} & rs2_data) |
+	({32{type_i | inst_lui | inst_auipc}} & imm) |
+	({32{jump}} & 32'b0);
+
+assign data3 =
+	({32{inst_jal | type_branch}} & pc) |
+	({32{inst_jalr}} & rs1_data);
+
+assign data4 =
+	({32{inst_jal}} & j_imm) |
+	({32{inst_jalr}} & i_imm) |
+	({32{type_branch}} & b_imm);
 
 
 endmodule

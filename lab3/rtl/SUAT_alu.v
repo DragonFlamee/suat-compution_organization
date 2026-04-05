@@ -14,6 +14,7 @@ module SUAT_alu(
     wire [`SUAT_DATA] adder_alu_res ;
     wire              is_lt         ;
     wire              is_equ;
+    wire              is_ne;
     wire              is_ge;
     alu_add u_alu_add(
          .a                 (op1            )//<<i<<
@@ -73,5 +74,6 @@ module SUAT_alu(
 
 
     // TODO cmp_res
+    assign cmp_res = {is_ge, is_ne, is_equ, is_lt};
 
 endmodule

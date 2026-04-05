@@ -20,6 +20,8 @@ module alu_add(
     assign msb_xor = a[31] ^ b[31];     // 对 a 和 b 的最高位进行异或
     assign lt = ~(msb_xor | cout) | (msb_xor & (is_unsigned ^ cout));
 
-    // TODO
+    assign equ = (a == b);
+    assign ne  = ~equ;
+    assign ge  = ~lt;
 
 endmodule
