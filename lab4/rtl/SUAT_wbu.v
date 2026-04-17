@@ -1,11 +1,16 @@
 `include "define.v"
 
 module SUAT_wbu(
- 	 input     wire  [TODO:0]      	  wb_ctl
+ 	 input     wire  [1:0]      	  wb_ctl
  	,input     wire  [`SUAT_DATA]     exu_res
  	,input     wire  [`SUAT_DATA]     lsu_res
  	,output    wire  [`SUAT_DATA]     wb_data
   	,output    wire                   wb_wen
 );
+
+	assign wb_data = (exu_res & {32{wb_ctl[0]}}) |
+					 (lsu_res & {32{wb_ctl[1]}});
+
+	assign wb_wen = wb_ctl[0] | wb_ctl[1];
 
 endmodule

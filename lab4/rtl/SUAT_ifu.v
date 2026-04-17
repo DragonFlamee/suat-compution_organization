@@ -1,3 +1,5 @@
+`include "define.v"
+
 module SUAT_ifu (
   input  wire						clk			
  ,input  wire						rst			

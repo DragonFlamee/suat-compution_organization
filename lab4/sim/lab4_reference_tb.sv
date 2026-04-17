@@ -60,7 +60,7 @@ task init_program;
         end
 
         // Vivado GUI 可能从工程目录或 xsim.dir 启动，这里把镜像路径写死，避免相对路径失效。
-        $readmemh("your_abs_path/lab4/rtl/test.hex", instr_mem, 0, AI_IMAGE_WORDS - 1);
+        $readmemh("D:/Desktop/Curriculum/COAD/LAB/LabCode/lab4/rtl/test.hex", instr_mem, 0, AI_IMAGE_WORDS - 1);
         for (i = 0; i < AI_IMAGE_WORDS; i = i + 1) begin
             u_top.imem6.sram[i] = instr_mem[i];
         end
@@ -70,10 +70,10 @@ endtask
 task init_trace_database;
     begin
         // 轨迹数据库同样改成绝对路径，这样 GUI 仿真时 expected 值不会再读成 x。
-        $readmemh("your_abs_path/lab4/sim/database/difftest_retired_pc.hex", trace_retired_pc, 0, TRACE_STEPS - 1);
-        $readmemh("your_abs_path/lab4/sim/database/difftest_pc.hex", trace_debug_pc, 0, TRACE_STEPS - 1);
-        $readmemh("your_abs_path/lab4/sim/database/difftest_regs.hex", trace_gpr_packed, 0, TRACE_STEPS - 1);
-        $readmemh("your_abs_path/lab4/sim/database/difftest_lsu.hex", trace_lsu_packed, 0, TRACE_STEPS - 1);
+        $readmemh("D:/Desktop/Curriculum/COAD/LAB/LabCode/lab4/sim/database/difftest_retired_pc.hex", trace_retired_pc, 0, TRACE_STEPS - 1);
+        $readmemh("D:/Desktop/Curriculum/COAD/LAB/LabCode/lab4/sim/database/difftest_pc.hex", trace_debug_pc, 0, TRACE_STEPS - 1);
+        $readmemh("D:/Desktop/Curriculum/COAD/LAB/LabCode/lab4/sim/database/difftest_regs.hex", trace_gpr_packed, 0, TRACE_STEPS - 1);
+        $readmemh("D:/Desktop/Curriculum/COAD/LAB/LabCode/lab4/sim/database/difftest_lsu.hex", trace_lsu_packed, 0, TRACE_STEPS - 1);
     end
 endtask
 

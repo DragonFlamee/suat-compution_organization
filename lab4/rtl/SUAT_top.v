@@ -23,14 +23,14 @@ wire [`SUAT_REGADDR] 		  	id_reg_rd_addr  ;
 wire                          	id_reg_rs1_ren	;
 wire                          	id_reg_rs2_ren	;
 
-wire [TODO:0]     		   		id_wb_ctl;
+wire [1:0]     		   		    id_wb_ctl;
 wire [`SUAT_DATA]				data1;
 wire [`SUAT_DATA]				data2;
 wire [`SUAT_DATA]				data3;
 wire [`SUAT_DATA]				data4;
 
 // exu
-wire [TODO:0]					exu_op;
+wire [17:0]					    exu_op;
 wire [`SUAT_DATA]				exu_addr;		
 wire [`SUAT_DATA] 	     		exu_data;
 wire                            exu_jump;
@@ -46,7 +46,7 @@ wire [15:0]                       ls_sram_addr;
 wire [`SUAT_DATA]                 ls_sram_wdata;
 wire [3:0]                        ls_sram_wren;
 wire [`SUAT_DATA]                 ls_sram_rdata;
-wire [TODO:0]                     lsu_op;
+wire [3:0]                        lsu_op;
 wire [3:0]                        lsu_wren_raw;
 wire [`SUAT_DATA]                 lsu_wdata_raw;
 wire [`SUAT_DATA]                 lsu_rdata_raw;
@@ -95,7 +95,7 @@ SUAT_idu idu1(
 	,.data4		(data4					)
 );
 
-SUAT_exu exu2(
+SUAT_exu exu2( 
 	 .data1       (data1	        )
 	,.data2       (data2         	)
 	,.data3       (data3         	)
@@ -120,7 +120,7 @@ SUAT_lsu lsu3(
 
 SUAT_wbu wbu4(
 	 .wb_ctl	(id_wb_ctl  			)
-	,.exu_res	(exu_data 				)
+	,.exu_res	(exu_addr 				)
 	,.lsu_res	(ls_wb_data 			)
 	,.wb_data	(wb_reg_rd_data 		)
 	,.wb_wen	(wb_wen					)
