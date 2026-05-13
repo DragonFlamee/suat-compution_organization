@@ -3,13 +3,14 @@
 module SUAT_ifu (
   input  wire						clk
  ,input  wire						rst
- ,input	 wire						jump
- ,input	 wire 	[`SUAT_PC]			jump_pc
+ ,input	 wire						flush
+ ,input	 wire 	[`SUAT_PC]			flush_pc
+ ,input  wire						id_allow_in
  ,input  wire	[`SUAT_INST]		inst_i
- ,input  wire 						id_allow_in
  ,output wire 	[`SUAT_INST]		inst_o
  ,output wire	[`SUAT_PC]			pc_o
  ,output wire	[`SUAT_PC] 			snpc_o
+ ,output wire						if_valid_o
  );
 
  reg  [`SUAT_PC] pc_reg;
@@ -19,17 +20,17 @@ module SUAT_ifu (
  assign snpc_o = snpc;
  assign inst_o = inst_i;
  assign pc_o   = pc_reg;
-
-// TODO: Modify the following always block to update pc_reg correctly
+ assign if_valid_o = id_allow_in;
+ 
  always@(posedge clk) begin
 	if(rst == `SUAT_RSTABLE)begin
 	    pc_reg <= `SUAT_STARTPC;		
 	end
-	else if(jump)begin
-		pc_reg <= jump_pc;
+    else if (flush) begin
+	    pc_reg <= flush_pc;
 	end
-	else if(id_allow_in) begin
-		pc_reg <= snpc;
+    else if (id_allow_in) begin
+	    pc_reg <= snpc;
 	end
 end
 

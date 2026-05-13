@@ -34,6 +34,6 @@ assign addr_res = data3 + data4;
 
 assign exu_addr = addr_res;
 assign exu_data = alu_res & {32{exu_op[10]}} | addr_res & {32{exu_op[11]}};
-assign exu_jump_pc = {addr_res[31:1], 1'b0} & {32{exu_op[12]}};
+assign exu_jump_pc = addr_res & {32{exu_op[12]}};
     
 endmodule

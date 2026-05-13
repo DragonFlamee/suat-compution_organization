@@ -3,13 +3,16 @@
 module SUAT_top(
 	 input wire              	clk		  
 	,input wire              	rst
+	,input wire                 rx_pad
+	,output wire                tx_pad
 );
 
 // ifu
-wire [`SUAT_INST]                 if_inst_o;
-wire [`SUAT_PC]                   if_pc_o;
-wire [`SUAT_PC]					  if_snpc_o;
-wire [`SUAT_INST]                 iram_rdata;
+wire [`SUAT_INST]               if_inst_o;
+wire [`SUAT_PC]                 if_pc_o;
+wire [`SUAT_PC]                 if_snpc_o;
+wire                            if_valid_o;
+wire [`SUAT_INST]               iram_rdata;
 
 // idu
 wire [`SUAT_REGADDR] 		  	id_rs1_addr ;
@@ -23,7 +26,7 @@ wire [`SUAT_DATA]				id_data2;
 wire [`SUAT_DATA]				id_data3;
 wire [`SUAT_DATA]				id_data4;
 wire [17:0]						id_exu_op;
-wire [3:0]                      id_lsu_op;
+wire [4:0]                      id_lsu_op;
 wire [2:0]     		   		 	id_wbu_op;
 
 // exu
@@ -32,11 +35,12 @@ wire [`SUAT_DATA] 	     		exu_data;
 wire                            exu_jump;
 wire [`SUAT_PC]                 exu_jump_pc;
 
-// lsu
-wire [`SUAT_DATA]                 ls_wb_data;
-wire [31:0]                       ls_addr;
-wire [`SUAT_DATA]                 ls_wdata;
-wire [3:0]                        ls_wren;
+// mem
+wire [`SUAT_DATA]               mem_wb_data;
+wire [31:0]                     mem_addr;
+wire [`SUAT_DATA]               mem_wdata;
+wire [3:0]                      mem_wren;
+wire 						    mem_rden;
 
 // wbu
 wire [`SUAT_DATA]	   			wb_rd_data;
@@ -47,23 +51,16 @@ wire [`SUAT_REG] 				rf_rs1_data;
 wire [`SUAT_REG] 				rf_rs2_data;
 wire                            rf_rd_wen;
 wire [`SUAT_DATA]				rf_rd_data;
-wire [4:0]						rf_rd_addr;
 
 // data sram
-wire [15:0]	ls_sram_addr;
-wire [31:0] ls_sram_wdata;
-wire [3:0]	ls_sram_wren;
-wire [31:0] ls_sram_rdata;
 
-assign ls_sram_addr = ls_addr[15:0];
-assign ls_sram_wdata = ls_wdata;
-
-// control signals
-wire jump;
+// Pipeline control signals
+wire id_allow_in, ex_allow_in, mem_allow_in, wb_allow_in;
+wire flush;
 wire wbu_commit;
-wire [31:0] jump_pc;
+wire [31:0] flush_pc;
 
-// registers
+// Pipeline registers
 reg        if_id_valid;
 reg [31:0] if_id_pc;
 reg [31:0] if_id_inst;
@@ -75,14 +72,14 @@ reg [31:0] id_ex_data2;
 reg [31:0] id_ex_data3;
 reg [31:0] id_ex_data4;
 reg [17:0] id_ex_exu_op;
-reg [3:0]  id_ex_lsu_op;
+reg [4:0]  id_ex_lsu_op;
 reg [2:0]  id_ex_wbu_op;
 reg [4:0]  id_ex_rd_addr;
 
 reg        ex_mem_valid;
 reg [31:0] ex_mem_addr;
 reg [31:0] ex_mem_data;
-reg [3:0]  ex_mem_lsu_op;
+reg [4:0]  ex_mem_lsu_op;
 reg [2:0]  ex_mem_wbu_op;
 reg [4:0]  ex_mem_rd_addr;
 
@@ -92,12 +89,6 @@ reg [31:0] mem_wb_lsu_data;
 reg [2:0]  mem_wb_wbu_op;
 reg [4:0]  mem_wb_rd_addr;
 
-
-
-// TODO
-/* Implement the state transition control of the multi-cycle processor. 
-   You may use the following state definition for the FSM.*/
-
 reg [2:0] state;
 localparam S_IF  = 3'd0;
 localparam S_ID  = 3'd1;
@@ -106,32 +97,36 @@ localparam S_MEM = 3'd3;
 localparam S_WB  = 3'd4;
 
 always @(posedge clk) begin
-	if(rst == `SUAT_RSTABLE)begin
-		state <= S_IF;
-	end
-	else if (state == S_WB) begin
-		state <= S_IF;
-	end
-	else begin
-		state <= state + 1;
-	end
+    if (rst) begin
+        state <= S_IF;
+    end else begin
+        case (state)
+            S_IF:  state <= S_ID;
+            S_ID:  state <= S_EX;
+            S_EX:  state <= S_MEM;
+            S_MEM: state <= S_WB;
+            S_WB:  state <= S_IF;
+            default: state <= S_IF;
+        endcase
+    end
 end
 
-wire id_allow_in = state == S_IF;
-wire ex_stage_valid = (state == S_EX) && id_ex_valid;
-
-assign ls_sram_wren = (state == S_MEM && ex_mem_valid) ? ls_wren : 4'b0000;
+assign id_allow_in  = (state == S_ID);
+assign ex_allow_in  = (state == S_EX);
+assign mem_allow_in = (state == S_MEM);
+assign wb_allow_in  = (state == S_WB);
 
 SUAT_ifu ifu0(
      .clk     		(clk       		)
 	,.rst     		(rst       		)
-	,.jump   		(jump   		)
-	,.jump_pc 		(jump_pc		)
-	,.inst_i  		(iram_rdata  	)
+	,.flush   		(flush   		)
+	,.flush_pc 		(flush_pc		)
 	,.id_allow_in	(id_allow_in	)
+	,.inst_i  		(iram_rdata  	)
 	,.inst_o  		(if_inst_o		)
 	,.pc_o    		(if_pc_o  		)
 	,.snpc_o   		(if_snpc_o		)
+	,.if_valid_o	(if_valid_o		)
 );
 
 // if2id register
@@ -142,8 +137,10 @@ always @(posedge clk) begin
 		if_id_inst <= `SUAT_ZERO32;
 		if_id_snpc <= `SUAT_ZERO32;
 	end
-	// TODO
-	else if(state == S_IF)begin
+	else if (flush) begin
+		if_id_valid <= 0;
+	end
+	else if (id_allow_in) begin
 		if_id_valid <= 1;
 		if_id_pc <= if_pc_o;
 		if_id_inst <= if_inst_o;
@@ -192,9 +189,11 @@ always @(posedge clk) begin
 		id_ex_wbu_op <= 0;
 		id_ex_rd_addr <= 0;
 	end
-	// TODO
-	else if(state == S_ID && if_id_valid)begin
-		id_ex_valid <= 1;
+	else if (flush) begin
+		id_ex_valid <= 0;
+	end
+	else if (ex_allow_in) begin
+		id_ex_valid <= if_id_valid;
 		id_ex_data1 <= id_data1;
 		id_ex_data2 <= id_data2;
 		id_ex_data3 <= id_data3;
@@ -207,7 +206,6 @@ always @(posedge clk) begin
 	else begin
 		id_ex_valid <= 0;
 	end
-
 end
 
 SUAT_exu exu2(
@@ -232,9 +230,8 @@ always @(posedge clk) begin
 		ex_mem_wbu_op <= 0;
 		ex_mem_rd_addr <= 0;
 	end
-	// TODO
-	else if(state == S_EX && id_ex_valid)begin
-		ex_mem_valid <= 1;
+	else if (mem_allow_in) begin
+		ex_mem_valid <= id_ex_valid;
 		ex_mem_addr <= exu_addr;
 		ex_mem_data <= exu_data;
 		ex_mem_lsu_op <= id_ex_lsu_op;
@@ -246,18 +243,30 @@ always @(posedge clk) begin
 	end
 end
 
-assign jump = ex_stage_valid && exu_jump;
-assign jump_pc = jump ? exu_jump_pc : `SUAT_ZERO32;
+assign flush = exu_jump & id_ex_valid; // 只有当 id_ex_valid 时才允许跳转
+assign flush_pc = exu_jump_pc;
+
+wire [3:0]  ls_wren;
+wire        ls_rden;
+wire [31:0] ls_addr;
+wire [31:0] ls_wdata;
+wire [31:0] mem_rdata;
+
+assign mem_wren = ex_mem_valid ? ls_wren : 4'b0000;
+assign mem_rden = ex_mem_valid ? ls_rden : 1'b0;
+assign mem_addr  = ls_addr;
+assign mem_wdata = ls_wdata;
 
 SUAT_mem mem3(
  .addr_i	(ex_mem_addr		)
 ,.wdata_i	(ex_mem_data		)
-,.rdata_i	(ls_sram_rdata		)
+,.rdata_i	(mem_rdata		)
 ,.lsu_op	(ex_mem_lsu_op		)
-,.WREN		(ls_wren		)
-,.addr_o	(ls_addr		)
-,.wdata_o	(ls_wdata		)
-,.rdata_o	(ls_wb_data			)
+,.WREN		(ls_wren			)
+,.RDEN		(ls_rden			)
+,.addr_o	(ls_addr			)
+,.wdata_o	(ls_wdata			)
+,.rdata_o	(mem_wb_data			)
 );
 
 // mem2wb register
@@ -269,11 +278,10 @@ always @(posedge clk) begin
 		mem_wb_wbu_op <= 0;
 		mem_wb_rd_addr <= 0;
 	end
-	// TODO
-	else if(state == S_MEM && ex_mem_valid)begin
-		mem_wb_valid <= 1;
+	else if (wb_allow_in) begin
+		mem_wb_valid <= ex_mem_valid;
 		mem_wb_exu_data <= ex_mem_data;
-		mem_wb_lsu_data <= ls_wb_data;
+		mem_wb_lsu_data <= mem_wb_data;
 		mem_wb_wbu_op <= ex_mem_wbu_op;
 		mem_wb_rd_addr <= ex_mem_rd_addr;
 	end
@@ -282,25 +290,24 @@ always @(posedge clk) begin
 	end
 end
 
-assign wbu_commit = (state == S_WB) && mem_wb_valid;
-assign rf_rd_addr = mem_wb_rd_addr;
+assign wbu_commit = mem_wb_valid;
+assign rf_rd_wen = mem_wb_valid & wb_wen;
 assign rf_rd_data = wb_rd_data;
-assign rf_rd_wen = wbu_commit && wb_wen;
 
 SUAT_wbu wbu4(
 	 .wbu_op		(mem_wb_wbu_op			)
 	,.exu_res		(mem_wb_exu_data 		)
-	,.mem_res		(mem_wb_lsu_data 		)
+	,.lsu_res		(mem_wb_lsu_data 		)
 	,.wb_data		(wb_rd_data 			)
 	,.wb_wen		(wb_wen					)
 );
 
 SUAT_regfile reg5(
-	 .clk  		(clk				)
-	,.rst  		(rst				)
-	,.waddr		(rf_rd_addr			)
-	,.wdata		(rf_rd_data			)
-	,.wen    	(rf_rd_wen			)
+	 .clk  		(clk					)
+	,.rst  		(rst					)
+	,.waddr		(mem_wb_rd_addr			)
+	,.wdata		(rf_rd_data				)
+	,.wen    	(rf_rd_wen 				)
 	,.raddr1 	(id_rs1_addr		)
 	,.rdata1 	(rf_rs1_data		)
 	,.ren1  	(id_rs1_ren 		)
@@ -309,20 +316,64 @@ SUAT_regfile reg5(
 	,.ren2 		(id_rs2_ren 		)
 );
 
-SUAT_sram imem6(
+wire imem_rden = (if_pc_o[31:16] == 16'h8000) & if_valid_o;
+
+wire [31:0] imem2c_data_i;
+wire [31:0] dmem2c_data_i;
+wire [31:0] uart2c_data_i;
+
+wire [3:0]  c2dmem_wren_o;
+wire [3:0]  c2uart_wren_o;
+wire        c2imem_rden_o;
+wire        c2dmem_rden_o;
+wire        c2uart_rden_o;
+
+SUAT_imem imem6(
 	 .CLK	(clk				)
-	,.ADDR	(if_pc_o[15:2]		)
-	,.WDATA	(`SUAT_ZERO32		)
-	,.WREN	(4'b0000			)
-	,.RDATA	(iram_rdata			)
+	,.ADDR1 (if_pc_o[15:2]      )
+	,.RDEN1 (imem_rden          )
+	,.ADDR2 (ls_addr[15:2]		)
+	,.WREN2	(4'b0000			)
+	,.WDATA2(`SUAT_ZERO32		)
+	,.RDEN2 (c2imem_rden_o		)
+	,.RDATA1(iram_rdata			)
+	,.RDATA2(imem2c_data_i		)
 );
 
-SUAT_sram dmem7(
+mux u_mux(
+     .addr_i			(mem_addr[31:16])
+    ,.wren_i			(mem_wren		)
+    ,.rden_i			(mem_rden		)
+	,.imem2c_data_i		(imem2c_data_i	)
+    ,.dmem2c_data_i		(dmem2c_data_i	)
+    ,.uart2c_data_i		(uart2c_data_i	)
+    ,.c2dmem_wren_o		(c2dmem_wren_o	)
+    ,.c2uart_wren_o		(c2uart_wren_o	)
+    ,.c2imem_rden_o		(c2imem_rden_o	)
+    ,.c2dmem_rden_o		(c2dmem_rden_o	)
+    ,.c2uart_rden_o		(c2uart_rden_o	)
+    ,.rdata				(mem_rdata		)
+);
+
+SUAT_dmem dmem7(
 	 .CLK	(clk				)
-	,.ADDR	(ls_sram_addr[15:2])
-	,.WDATA	(ls_sram_wdata		)
-	,.WREN	(ls_sram_wren		)
-	,.RDATA	(ls_sram_rdata		)
+	,.ADDR	(ls_addr[15:2]		)
+	,.WDATA	(ls_wdata			)
+	,.WREN	(c2dmem_wren_o		)
+	,.RDEN  (c2dmem_rden_o		)
+	,.RDATA	(dmem2c_data_i		)
+);
+
+uart u_uart(
+   .CLK			(clk			)
+  ,.RST		    (rst			)
+  ,.ADDR		(ls_addr[15:0]	)
+  ,.WDATA		(ls_wdata		)
+  ,.WREN		(c2uart_wren_o	)
+  ,.RDEN		(c2uart_rden_o	)
+  ,.RDATA		(uart2c_data_i	)
+  ,.rx_pad		(rx_pad			)
+  ,.tx_pad		(tx_pad			)
 );
 
 endmodule
